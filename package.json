@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "audit": "node --env-file=.env scripts/run-attacks.ts",
+    "scan": "node scripts/scan.ts"
   },
   "dependencies": {
     "next": "16.3.2",
