@@ -13,7 +13,7 @@ function Panel({
   accentClass: string;
   target: { repoUrl: string; liveUrl: string };
 }) {
-  const { entries, running, run } = useAuditRun();
+  const { entries, running, run, source, appendVerified } = useAuditRun();
 
   return (
     <section className="flex min-h-0 flex-1 flex-col rounded-lg border border-white/10 bg-zinc-800/60">
@@ -37,6 +37,8 @@ function Panel({
         <EvidenceLog
           entries={entries}
           emptyHint="No checks run yet. Press RUN to fire all 6 static rules and 3 live attacks."
+          source={source}
+          onVerified={appendVerified}
         />
       </div>
     </section>

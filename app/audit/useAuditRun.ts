@@ -3,6 +3,7 @@
 import { useCallback, useRef, useState } from "react";
 import { RULE_CATALOG } from "@/lib/rules";
 import { ATTACK_CATALOG } from "@/lib/attacks/catalog";
+import { ruleIdForAttack } from "@/lib/pairing";
 import type { LogEntry, EntryStatus } from "./types";
 import { formatTimestamp } from "./format";
 
@@ -21,6 +22,8 @@ function initialEntries(): LogEntry[] {
         time: null,
         meta: null,
         detail: null,
+        ruleId: r.id,
+        parentId: null,
       }),
     ),
     ...ATTACK_CATALOG.map(
@@ -32,6 +35,8 @@ function initialEntries(): LogEntry[] {
         time: null,
         meta: null,
         detail: null,
+        ruleId: ruleIdForAttack(a.id),
+        parentId: null,
       }),
     ),
   ];
@@ -46,10 +51,12 @@ function initialEntries(): LogEntry[] {
 export function useAuditRun() {
   const [entries, setEntries] = useState<LogEntry[]>([]);
   const [running, setRunning] = useState(false);
+  const [source, setSource] = useState<string | null>(null);
   const runIdRef = useRef(0);
 
   const run = useCallback(async (source: string, target: string) => {
     const runId = ++runIdRef.current;
+    setSource(source);
     setEntries(initialEntries());
     setRunning(true);
 
@@ -98,5 +105,28 @@ export function useAuditRun() {
     if (runIdRef.current === runId) setRunning(false);
   }, []);
 
-  return { entries, running, run };
+  /**
+   * Appends a new sky "FIX RE-VERIFIED" entry beneath an existing finding
+   * without touching it — the append-only re-verify contract. Callers must
+   * only invoke this after a fresh /api/apply re-run of the paired rule
+   * reported found: false; this hook does not itself decide that.
+   */
+  const appendVerified = useCallback((parent: LogEntry, explanation: string, meta: string | null) => {
+    setEntries((prev) => [
+      ...prev,
+      {
+        id: `verified:${parent.id}:${Date.now()}`,
+        kind: parent.kind,
+        label: `${parent.label} — fix re-verified`,
+        status: "verified",
+        time: formatTimestamp(),
+        meta,
+        detail: explanation,
+        ruleId: parent.ruleId,
+        parentId: parent.id,
+      },
+    ]);
+  }, []);
+
+  return { entries, running, run, source, appendVerified };
 }
