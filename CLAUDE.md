@@ -174,6 +174,38 @@ paired-rule re-verify. The paired-rule re-verify is sufficient and reliable
 for the whole matrix; this would only add an extra, heavier confirmation for
 the live-attack path specifically.
 
+**Known limitation, found during live verification**: Apply only patches one
+file, so it cannot fix a defect whose *correct* remediation needs a new
+persisted model (a Prisma schema addition + migration) — `no-idempotency`'s
+canonical fix in `../fixed` adds a `processedWebhookEvent` table and wraps the
+handler in a `$transaction`. Draft-fix, grounded on that reference, correctly
+proposes the same real fix rather than a same-file workaround (it does not
+fabricate an in-memory dedup as a weaker substitute) — but that means the
+guardrail in `lib/diff/derive.ts` rejects it as too broad, since applying it
+as plain text would reference a table that doesn't exist in the audited
+app's actual schema and crash at runtime, even though the `no-idempotency`
+rule's regex would (wrongly) call it CLEAR. **This rejection is correct
+behaviour, not a bug** — it is exactly the guardrail doing its job — but it
+means `no-idempotency` (and therefore the `webhookReplay` live attack it is
+paired with) does not currently have an Apply-able fix. The other two
+paired rules (`browser-trusted-success`/`fakePaymentSuccess`,
+`raw-body-violation`/`forgedSignature`) are same-file, no-new-model fixes and
+are live-verified working end to end (see below). Extending Apply to
+multi-file patches (route + schema + migration) would close this gap; not
+attempted here — flag it before building it, since it changes the guardrail
+and re-verify contract non-trivially.
+
+**Live-verified** (2026, against `../vulnerable` with a real `ANTHROPIC_API_KEY`):
+Explain (`browser-trusted-success`) streamed a correct, appropriately-scoped
+explanation. Draft-fix → Apply closed the loop for `browser-trusted-success`
+and `raw-body-violation` — the real model output re-verified `found: false`
+through the paired rule both times, and `../vulnerable`'s `git status` stayed
+clean throughout (the overlay never touched the real source). Draft-fix for
+`no-idempotency` was correctly guardrail-rejected per the limitation above;
+inspection confirmed the model's proposed fix was well-scoped (it left the
+other two defects sharing that file untouched) and would have worked with a
+schema migration Apply doesn't currently support.
+
 ## Setup
 - `.env` needs `RAZORPAY_KEY_SECRET` / `RAZORPAY_WEBHOOK_SECRET` (Phase 1,
   shared with `../fixed` / `../vulnerable`, test-mode only) and
