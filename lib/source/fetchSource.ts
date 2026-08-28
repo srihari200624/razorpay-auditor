@@ -26,56 +26,71 @@ export function fetchFromLocal(folderPath: string): SourceFetcher {
   };
 }
 
+// Module-level caches so a fetched file survives ACROSS requests — `resolveSource`
+// makes a fresh SourceFetcher per call, so a per-instance cache would only live
+// for one request. Keyed by owner/repo(/path); they persist for the process /
+// serverless-instance lifetime (a redeploy clears them), which is exactly right
+// for the two fixed demo repos: repeated audit runs (a live judge clicking, or
+// several recording takes) reuse one fetch instead of burning the 60 req/hr
+// unauthenticated GitHub limit. Failed fetches are evicted (below) so a
+// transient 403/network error can't poison the cache permanently.
+const branchCache = new Map<string, Promise<string>>();
+const fileCache = new Map<string, Promise<string | null>>();
+
+function getDefaultBranch(owner: string, repo: string): Promise<string> {
+  const key = `${owner}/${repo}`;
+  let p = branchCache.get(key);
+  if (!p) {
+    p = (async () => {
+      const res = await fetch(`https://api.github.com/repos/${owner}/${repo}`, {
+        headers: { Accept: "application/vnd.github+json" },
+      });
+      if (!res.ok) {
+        throw new Error(
+          `GitHub API: failed to look up ${owner}/${repo}: ${res.status} ${await res.text()}`,
+        );
+      }
+      const data = (await res.json()) as { default_branch: string };
+      return data.default_branch;
+    })();
+    branchCache.set(key, p);
+    p.catch(() => branchCache.delete(key)); // don't cache a failed lookup
+  }
+  return p;
+}
+
 export function fetchFromGitHub(repoUrl: string): SourceFetcher {
   const { owner, repo } = parseGitHubUrl(repoUrl);
-
-  let defaultBranchPromise: Promise<string> | null = null;
-  function getDefaultBranch(): Promise<string> {
-    if (!defaultBranchPromise) {
-      defaultBranchPromise = (async () => {
-        const res = await fetch(`https://api.github.com/repos/${owner}/${repo}`, {
-          headers: { Accept: "application/vnd.github+json" },
-        });
-        if (!res.ok) {
-          throw new Error(
-            `GitHub API: failed to look up ${owner}/${repo}: ${res.status} ${await res.text()}`,
-          );
-        }
-        const data = (await res.json()) as { default_branch: string };
-        return data.default_branch;
-      })();
-    }
-    return defaultBranchPromise;
-  }
-
-  // One in-flight/completed fetch per path — rules 2/3 share verify-payment's
-  // route.ts and rules 4/5/6 share webhook's, so this avoids refetching (and
-  // burning unauthenticated rate limit) when several rules target one file.
-  const cache = new Map<string, Promise<string | null>>();
 
   return {
     label: `github:${owner}/${repo}`,
     fetchFile(filePath: string): Promise<string | null> {
-      if (!cache.has(filePath)) {
-        cache.set(
-          filePath,
-          (async () => {
-            const branch = await getDefaultBranch();
-            const res = await fetch(
-              `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}?ref=${branch}`,
-              { headers: { Accept: "application/vnd.github.raw+json" } },
-            );
-            if (res.status === 404) return null;
-            if (!res.ok) {
-              throw new Error(
-                `GitHub API: failed to fetch ${owner}/${repo}/${filePath}: ${res.status} ${await res.text()}`,
-              );
-            }
-            return await res.text();
-          })(),
-        );
+      const key = `${owner}/${repo}:${filePath}`;
+      const cached = fileCache.get(key);
+      if (cached) {
+        console.log(`[github-cache] HIT ${key}`);
+        return cached;
       }
-      return cache.get(filePath)!;
+      console.log(`[github-cache] MISS ${key}`);
+
+      const p = (async () => {
+        const branch = await getDefaultBranch(owner, repo);
+        const res = await fetch(
+          `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}?ref=${branch}`,
+          { headers: { Accept: "application/vnd.github.raw+json" } },
+        );
+        if (res.status === 404) return null;
+        if (!res.ok) {
+          throw new Error(
+            `GitHub API: failed to fetch ${owner}/${repo}/${filePath}: ${res.status} ${await res.text()}`,
+          );
+        }
+        return await res.text();
+      })();
+
+      fileCache.set(key, p);
+      p.catch(() => fileCache.delete(key)); // don't cache a failed fetch
+      return p;
     },
   };
 }
