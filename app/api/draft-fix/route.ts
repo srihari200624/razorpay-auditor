@@ -3,6 +3,7 @@ import { isGitHubTarget, resolveSource } from "@/lib/source/resolveSource";
 import { RULE_CATALOG } from "@/lib/rules";
 import { draftFix } from "@/lib/llm/draftFix";
 import { deriveDiff, checkGuardrail } from "@/lib/diff/derive";
+import { rateLimit } from "@/lib/llm/rateLimit";
 
 /**
  * Drafts a fix for one already-proven rule finding: full patched file (via
@@ -11,6 +12,14 @@ import { deriveDiff, checkGuardrail } from "@/lib/diff/derive";
  * here is a verdict, and nothing is written back to `source`.
  */
 export async function POST(req: Request) {
+  const rl = rateLimit(req);
+  if (rl.limited) {
+    return NextResponse.json(
+      { error: "Rate limit exceeded — try again later." },
+      { status: 429, headers: { "retry-after": String(rl.retryAfterSec) } },
+    );
+  }
+
   const body = (await req.json()) as { source: string; ruleId: string };
 
   if (!body?.source || !body?.ruleId) {
