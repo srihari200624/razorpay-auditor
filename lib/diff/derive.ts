@@ -102,7 +102,13 @@ export interface GuardrailResult {
 }
 
 export function checkGuardrail(diff: DerivedDiff, opts: GuardrailOptions = {}): GuardrailResult {
-  const maxChanged = opts.maxChangedLines ?? 60;
+  // 60 was an untested initial guess. Live testing against ../vulnerable
+  // showed legitimate single-defect fixes ranging 8-84 changed lines (the
+  // 84-line case — no-idempotency's real fix, adding a transaction-wrapped
+  // event-id check — was wrongly rejected at 60); a deliberately unrelated
+  // rewrite in the same testing came to 265 lines. 100 keeps real drift
+  // caught with margin while covering the fixes actually observed so far.
+  const maxChanged = opts.maxChangedLines ?? 100;
   const maxDistance = opts.maxAnchorDistance ?? 80;
 
   if (diff.changed === 0) {
