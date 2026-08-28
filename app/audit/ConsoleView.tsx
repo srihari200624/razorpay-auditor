@@ -7,7 +7,7 @@ import { useAuditRun } from "./useAuditRun";
 export function ConsoleView() {
   const [source, setSource] = useState("");
   const [target, setTarget] = useState("");
-  const { entries, running, run } = useAuditRun();
+  const { entries, running, run, source: ranSource, appendVerified } = useAuditRun();
 
   const canRun = source.trim().length > 0 && target.trim().length > 0 && !running;
 
@@ -53,7 +53,12 @@ export function ConsoleView() {
       </form>
       <section className="flex min-h-0 flex-1 flex-col rounded-lg border border-white/10 bg-zinc-800/60">
         <div className="flex-1 overflow-y-auto">
-          <EvidenceLog entries={entries} emptyHint="Enter a source and target, then RUN AUDIT." />
+          <EvidenceLog
+            entries={entries}
+            emptyHint="Enter a source and target, then RUN AUDIT."
+            source={ranSource}
+            onVerified={appendVerified}
+          />
         </div>
       </section>
     </div>

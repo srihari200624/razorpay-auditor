@@ -27,6 +27,11 @@ export const STATUS_STYLES: Record<EntryStatus, { tag: string; tagClass: string;
     tagClass: "text-red-400 border-red-400/50 bg-red-500/10",
     barClass: "bg-red-500",
   },
+  verified: {
+    tag: "FIX RE-VERIFIED",
+    tagClass: "text-sky-400 border-sky-400/40 bg-sky-400/10",
+    barClass: "bg-sky-400",
+  },
   error: {
     tag: "ERROR",
     tagClass: "text-zinc-400 border-zinc-600 bg-zinc-600/10",
