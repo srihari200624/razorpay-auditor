@@ -1,12 +1,21 @@
 import { NextResponse } from "next/server";
 import { explainStream } from "@/lib/llm/explain";
 import { hasExplicitCredentials } from "@/lib/llm/client";
+import { rateLimit } from "@/lib/llm/rateLimit";
 
 /**
  * Streams an advisory explanation of an already-proven finding. Never a
  * verdict — the deterministic engine already decided found/succeeded.
  */
 export async function POST(req: Request) {
+  const rl = rateLimit(req);
+  if (rl.limited) {
+    return NextResponse.json(
+      { error: "Rate limit exceeded — try again later." },
+      { status: 429, headers: { "retry-after": String(rl.retryAfterSec) } },
+    );
+  }
+
   const body = (await req.json()) as {
     kind: "rule" | "attack";
     label: string;
