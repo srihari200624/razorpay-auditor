@@ -58,7 +58,8 @@ export function PostureHeader({
   onRerun: () => void;
 }) {
   const color = LEVEL_COLOR[posture.level];
-  const clean = posture.found === 0;
+  const pristine = posture.found === 0 && posture.fixed === 0; // clean scan, nothing was wrong
+  const allFixed = posture.found === 0 && posture.fixed > 0; // everything found was remediated
 
   return (
     <div className="rounded-xl border border-white/10 bg-zinc-900/60 p-5 sm:p-6">
@@ -95,9 +96,13 @@ export function PostureHeader({
               RISK: {posture.level.toUpperCase()}
             </span>
           </div>
-          {clean ? (
+          {pristine ? (
             <p className="font-mono text-sm text-emerald-300">
               No defects found — all {posture.total} checks passed.
+            </p>
+          ) : allFixed ? (
+            <p className="font-mono text-sm text-emerald-300">
+              All {posture.fixed} findings remediated & re-verified.
             </p>
           ) : (
             <div className="flex flex-wrap items-center gap-2">
@@ -109,6 +114,9 @@ export function PostureHeader({
               )}
               {posture.counts.medium > 0 && (
                 <Count n={posture.counts.medium} label="MEDIUM" className="border-amber-500/40 bg-amber-500/10 text-amber-300" />
+              )}
+              {posture.fixed > 0 && (
+                <Count n={posture.fixed} label="FIXED" className="border-emerald-500/40 bg-emerald-500/10 text-emerald-300" />
               )}
               {posture.passed > 0 && (
                 <Count n={posture.passed} label="PASSED" className="border-emerald-500/40 bg-emerald-500/10 text-emerald-300" />

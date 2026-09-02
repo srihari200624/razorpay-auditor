@@ -61,10 +61,16 @@ export function ProductConsole() {
   const [verified, setVerified] = useState<Record<string, boolean>>({});
   const [passedOpen, setPassedOpen] = useState(false);
 
+  const [autoFixing, setAutoFixing] = useState(false);
+  const [currentFixId, setCurrentFixId] = useState<string | null>(null);
+  const [fixFailures, setFixFailures] = useState<Record<string, string>>({});
+  const [fixBanner, setFixBanner] = useState<string | null>(null);
+
   const findings = toFindings(entries);
-  const p = posture(findings);
+  const p = posture(findings, verified);
   const found = findings.filter((f) => f.found);
   const passed = findings.filter((f) => f.resolved && !f.found);
+  const openFound = found.filter((f) => !verified[f.defectId]);
 
   const roots = entries.filter((e) => e.parentId === null);
   const resolved = roots.filter((e) => e.status !== "pending").length;
@@ -72,9 +78,67 @@ export function ProductConsole() {
 
   function startRun(repo: string, live: string) {
     setVerified({});
+    setFixFailures({});
+    setFixBanner(null);
     setTarget(live);
     setStarted(true);
     run(repo, live);
+  }
+
+  async function autoFixAll() {
+    if (!source || autoFixing) return;
+    const targets = found.filter((f) => !verified[f.defectId] && f.ruleEntry?.ruleId);
+    setAutoFixing(true);
+    setFixBanner(null);
+    try {
+      for (const f of targets) {
+        const ruleId = f.ruleEntry!.ruleId!;
+        setCurrentFixId(f.defectId);
+        const dRes = await fetch("/api/draft-fix", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ source, ruleId }),
+        });
+        if (dRes.status === 429) {
+          setFixBanner("Rate limit reached — raise LLM_RATE_LIMIT_PER_HOUR (or wait) and re-run Auto-fix.");
+          break;
+        }
+        const draft = await dRes.json();
+        if (!dRes.ok) {
+          setFixFailures((m) => ({ ...m, [f.defectId]: draft?.error ?? `draft HTTP ${dRes.status}` }));
+          continue;
+        }
+        const aRes = await fetch("/api/apply", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ source, ruleId, filePath: draft.filePath, patchedFile: draft.patchedFile }),
+        });
+        if (aRes.status === 429) {
+          setFixBanner("Rate limit reached — raise LLM_RATE_LIMIT_PER_HOUR (or wait) and re-run Auto-fix.");
+          break;
+        }
+        const applied = await aRes.json();
+        if (!aRes.ok) {
+          setFixFailures((m) => ({ ...m, [f.defectId]: applied?.error ?? `apply HTTP ${aRes.status}` }));
+          continue;
+        }
+        if (applied.found) {
+          setFixFailures((m) => ({ ...m, [f.defectId]: "Re-verify failed — the rule still reports this defect." }));
+          continue;
+        }
+        setFixFailures((m) => {
+          const next = { ...m };
+          delete next[f.defectId];
+          return next;
+        });
+        setVerified((v) => ({ ...v, [f.defectId]: true }));
+      }
+    } catch (err) {
+      setFixBanner((err as Error).message);
+    } finally {
+      setAutoFixing(false);
+      setCurrentFixId(null);
+    }
   }
 
   return (
@@ -102,15 +166,58 @@ export function ProductConsole() {
 
           {found.length > 0 && (
             <section className="flex flex-col gap-3">
-              <p className="font-sans text-[11px] font-semibold tracking-widest text-zinc-500">
-                FINDINGS · WORST FIRST
-              </p>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <p className="font-sans text-[11px] font-semibold tracking-widest text-zinc-500">
+                  FINDINGS · WORST FIRST
+                </p>
+                {openFound.length > 0 ? (
+                  <button
+                    type="button"
+                    onClick={autoFixAll}
+                    disabled={autoFixing}
+                    className="inline-flex items-center gap-2 rounded-lg bg-sky-500 px-4 py-2 font-sans text-sm font-semibold text-zinc-950 transition-colors hover:bg-sky-400 disabled:opacity-50"
+                  >
+                    {autoFixing ? (
+                      <>
+                        <span
+                          className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-zinc-900 border-t-transparent"
+                          aria-hidden="true"
+                        />
+                        Auto-fixing… {p.fixed}/{found.length} re-verified
+                      </>
+                    ) : (
+                      <>⚡ Auto-fix all findings ({openFound.length})</>
+                    )}
+                  </button>
+                ) : (
+                  p.fixed > 0 && (
+                    <span className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 py-1.5 font-sans text-sm font-semibold text-emerald-300">
+                      ✓ all {p.fixed} findings remediated & re-verified
+                    </span>
+                  )
+                )}
+              </div>
+
+              {fixBanner && (
+                <p className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 font-mono text-sm text-amber-300">
+                  {fixBanner}
+                </p>
+              )}
+              {p.fixed > 0 && openFound.length === 0 && (
+                <p className="text-sm text-zinc-400">
+                  Each fix was applied to an in-memory copy and re-verified by re-running its own
+                  deterministic rule — your source was never modified.
+                </p>
+              )}
+
               {found.map((f) => (
                 <FindingCard
                   key={f.defectId}
                   finding={f}
                   source={source}
                   verified={!!verified[f.defectId]}
+                  fixing={currentFixId === f.defectId}
+                  failure={fixFailures[f.defectId]}
                   onVerified={(id) => setVerified((v) => ({ ...v, [id]: true }))}
                 />
               ))}

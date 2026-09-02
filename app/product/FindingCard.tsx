@@ -22,11 +22,15 @@ export function FindingCard({
   finding,
   source,
   verified,
+  fixing = false,
+  failure,
   onVerified,
 }: {
   finding: Finding;
   source: string | null;
   verified: boolean;
+  fixing?: boolean;
+  failure?: string;
   onVerified: (defectId: string) => void;
 }) {
   const [open, setOpen] = useState(finding.severity === "critical");
@@ -60,6 +64,15 @@ export function FindingCard({
           )}
         </span>
         <span className="flex shrink-0 items-center gap-1.5">
+          {fixing && (
+            <span className="flex items-center gap-1 font-mono text-[10px] text-sky-300">
+              <span
+                className="inline-block h-3 w-3 animate-spin rounded-full border border-sky-400/70 border-t-transparent"
+                aria-hidden="true"
+              />
+              fixing…
+            </span>
+          )}
           {staticProven && (
             <span className="rounded border border-zinc-600 px-1.5 py-0.5 font-mono text-[10px] text-zinc-400">
               static ✓
@@ -82,6 +95,10 @@ export function FindingCard({
           </p>
           {finding.ruleEntry && <EvidencePanel entry={finding.ruleEntry} />}
           {finding.attackEntry && <EvidencePanel entry={finding.attackEntry} />}
+
+          {failure && !verified && (
+            <p className="mt-2 font-mono text-sm text-amber-400">Auto-fix: {failure}</p>
+          )}
 
           {!verified && finding.ruleEntry && (
             <div className="mt-3 border-t border-white/5 pt-3">

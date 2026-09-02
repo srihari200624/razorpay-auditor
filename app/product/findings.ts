@@ -63,17 +63,25 @@ export interface Posture {
   score: number;
   level: "Low" | "Medium" | "High" | "Critical";
   counts: { critical: number; high: number; medium: number };
-  found: number;
+  found: number; // still-open findings (excludes ones re-verified as fixed)
   exploited: number;
   passed: number;
+  fixed: number; // found defects whose fix has been re-verified this session
   total: number;
 }
 
-export function posture(findings: Finding[]): Posture {
-  const found = findings.filter((f) => f.found);
+/**
+ * `verified` maps defectId -> true once a fix has been applied and re-verified.
+ * A verified defect stops counting toward the score/severity tally and is
+ * tallied as `fixed` instead — so the posture RISK drops live as an Auto-fix
+ * sweep re-verifies each finding.
+ */
+export function posture(findings: Finding[], verified: Record<string, boolean> = {}): Posture {
+  const foundAll = findings.filter((f) => f.found);
+  const active = foundAll.filter((f) => !verified[f.defectId]);
   const counts = { critical: 0, high: 0, medium: 0 };
   let score = 100;
-  for (const f of found) {
+  for (const f of active) {
     score -= SEVERITY_WEIGHT[f.severity];
     counts[f.severity] += 1;
   }
@@ -83,9 +91,10 @@ export function posture(findings: Finding[]): Posture {
     score,
     level,
     counts,
-    found: found.length,
-    exploited: found.filter((f) => f.exploited).length,
+    found: active.length,
+    exploited: active.filter((f) => f.exploited).length,
     passed: findings.filter((f) => f.resolved && !f.found).length,
+    fixed: foundAll.length - active.length,
     total: findings.length,
   };
 }
