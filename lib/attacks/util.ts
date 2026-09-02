@@ -11,19 +11,22 @@ export interface WebhookDelivery {
   body: string;
 }
 
-const WEBHOOK_SECRET = process.env.RAZORPAY_WEBHOOK_SECRET;
-if (!WEBHOOK_SECRET) {
-  throw new Error(
-    "RAZORPAY_WEBHOOK_SECRET is not set — run with: node --env-file=.env <script>",
-  );
-}
-
 export function hmacSha256Hex(secret: string, data: string): string {
   return crypto.createHmac("sha256", secret).update(data).digest("hex");
 }
 
+/** Reads the secret lazily (at call time, not module load) so a route module
+ * that merely imports this file — e.g. during Next.js build-time page-data
+ * collection — doesn't crash the whole build when the var isn't set in that
+ * environment. The attack itself still fails loudly the moment it's run. */
 export function signWebhookBody(rawBody: string): string {
-  return hmacSha256Hex(WEBHOOK_SECRET!, rawBody);
+  const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
+  if (!secret) {
+    throw new Error(
+      "RAZORPAY_WEBHOOK_SECRET is not set — run with: node --env-file=.env <script>",
+    );
+  }
+  return hmacSha256Hex(secret, rawBody);
 }
 
 /** Builds the exact raw JSON string that will be signed and sent — the
