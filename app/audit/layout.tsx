@@ -24,7 +24,7 @@ const fontOverride: CSSProperties = {
 export default function AuditLayout({ children }: { children: ReactNode }) {
   return (
     <div
-      className={`${auditMono.variable} ${auditSans.variable} flex min-h-screen flex-col bg-zinc-900 text-zinc-100`}
+      className={`${auditMono.variable} ${auditSans.variable} flex min-h-screen flex-col bg-[#0a0a0b] text-zinc-100`}
       style={fontOverride}
     >
       {children}

@@ -17,7 +17,7 @@ function Panel({
   const { entries, running, run, source, appendVerified } = useAuditRun();
 
   return (
-    <section className="flex min-h-0 flex-1 flex-col rounded-lg border border-white/10 bg-zinc-800/60">
+    <section className="flex min-h-0 flex-1 flex-col rounded-lg border border-white/[0.07] bg-[#151517]">
       <header className="flex flex-col gap-2 border-b border-white/10 px-4 py-3">
         <div className="flex items-center justify-between gap-4">
           <div className="min-w-0">

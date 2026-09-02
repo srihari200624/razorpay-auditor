@@ -30,7 +30,7 @@ export function EntryForm({ onRun }: { onRun: (repo: string, live: string) => vo
       </p>
 
       <form
-        className="mt-8 flex flex-col gap-4 rounded-xl border border-white/10 bg-zinc-900/60 p-6"
+        className="mt-8 flex flex-col gap-4 rounded-xl border border-white/[0.07] bg-[#151517] p-6"
         onSubmit={(e) => {
           e.preventDefault();
           if (canRun) onRun(repo.trim(), live.trim());
@@ -44,7 +44,7 @@ export function EntryForm({ onRun }: { onRun: (repo: string, live: string) => vo
             value={repo}
             onChange={(e) => setRepo(e.target.value)}
             placeholder="https://github.com/owner/repo"
-            className="rounded-lg border border-white/15 bg-black/40 px-3.5 py-2.5 font-mono text-sm text-zinc-100 outline-none focus:border-sky-400/60"
+            className="rounded-lg border border-white/15 bg-black/40 px-3.5 py-2.5 font-mono text-sm text-zinc-100 outline-none focus:border-blue-500/60"
           />
         </label>
         <label className="flex flex-col gap-1.5">
@@ -55,7 +55,7 @@ export function EntryForm({ onRun }: { onRun: (repo: string, live: string) => vo
             value={live}
             onChange={(e) => setLive(e.target.value)}
             placeholder="https://my-checkout.example.com"
-            className="rounded-lg border border-white/15 bg-black/40 px-3.5 py-2.5 font-mono text-sm text-zinc-100 outline-none focus:border-sky-400/60"
+            className="rounded-lg border border-white/15 bg-black/40 px-3.5 py-2.5 font-mono text-sm text-zinc-100 outline-none focus:border-blue-500/60"
           />
         </label>
 
@@ -63,7 +63,7 @@ export function EntryForm({ onRun }: { onRun: (repo: string, live: string) => vo
           <button
             type="submit"
             disabled={!canRun}
-            className="rounded-lg bg-sky-500 px-5 py-2.5 font-sans text-sm font-semibold text-zinc-950 transition-colors hover:bg-sky-400 disabled:cursor-not-allowed disabled:opacity-40"
+            className="rounded-lg bg-blue-600 px-5 py-2.5 font-sans text-sm font-semibold text-white transition-colors hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-40"
           >
             Run audit
           </button>

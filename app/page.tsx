@@ -9,7 +9,7 @@ function ghShort(url: string): string {
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen flex-col bg-zinc-900 text-zinc-100">
+    <div className="flex min-h-screen flex-col bg-[#0a0a0b] text-zinc-100">
       <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-14 px-6 py-16 sm:py-24">
         {/* Hero */}
         <section className="flex flex-col gap-6">
@@ -28,7 +28,7 @@ export default function Home() {
           <div className="mt-2 flex flex-wrap items-center gap-3">
             <Link
               href="/audit"
-              className="rounded-md bg-sky-500 px-5 py-2.5 font-sans text-sm font-semibold text-zinc-950 transition-colors hover:bg-sky-400"
+              className="rounded-md bg-blue-600 px-5 py-2.5 font-sans text-sm font-semibold text-white transition-colors hover:bg-blue-500"
             >
               Run the live audit →
             </Link>
@@ -50,7 +50,7 @@ export default function Home() {
         </section>
 
         {/* The principle — the moat */}
-        <section className="rounded-lg border border-white/10 bg-zinc-800/40 p-6">
+        <section className="rounded-lg border border-white/10 bg-[#151517] p-6">
           <p className="mb-2 font-mono text-[11px] font-semibold tracking-[0.2em] text-zinc-500">
             THE ARCHITECTURAL PRINCIPLE
           </p>
@@ -139,7 +139,7 @@ export default function Home() {
 
 function Step({ n, accent, title, body }: { n: string; accent: string; title: string; body: string }) {
   return (
-    <div className="flex flex-col gap-2 rounded-lg border border-white/10 bg-zinc-800/40 p-5">
+    <div className="flex flex-col gap-2 rounded-lg border border-white/10 bg-[#151517] p-5">
       <div className="flex items-baseline gap-2">
         <span className={`font-mono text-sm font-bold ${accent}`}>{n}</span>
         <span className="font-sans text-base font-semibold text-zinc-100">{title}</span>
@@ -163,7 +163,7 @@ function TargetCard({
   repoUrl: string;
 }) {
   return (
-    <div className="flex flex-col gap-3 rounded-lg border border-white/10 bg-zinc-800/40 p-5">
+    <div className="flex flex-col gap-3 rounded-lg border border-white/10 bg-[#151517] p-5">
       <div>
         <p className={`font-sans text-sm font-bold tracking-wide ${accent}`}>{label}</p>
         <p className="mt-0.5 text-xs text-zinc-500">{note}</p>

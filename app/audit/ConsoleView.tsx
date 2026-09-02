@@ -15,7 +15,7 @@ export function ConsoleView() {
   return (
     <div className="flex flex-1 flex-col gap-4 p-4">
       <form
-        className="flex flex-col gap-3 rounded-lg border border-white/10 bg-zinc-800/60 p-4 md:flex-row md:items-end"
+        className="flex flex-col gap-3 rounded-lg border border-white/[0.07] bg-[#151517] p-4 md:flex-row md:items-end"
         onSubmit={(e) => {
           e.preventDefault();
           if (!canRun) return;
@@ -52,7 +52,7 @@ export function ConsoleView() {
           {running ? "RUNNING…" : "RUN AUDIT"}
         </button>
       </form>
-      <section className="flex min-h-0 flex-1 flex-col rounded-lg border border-white/10 bg-zinc-800/60">
+      <section className="flex min-h-0 flex-1 flex-col rounded-lg border border-white/[0.07] bg-[#151517]">
         {entries.length > 0 && (
           <div className="border-b border-white/10 px-4 py-2.5">
             <Scoreboard entries={entries} />
