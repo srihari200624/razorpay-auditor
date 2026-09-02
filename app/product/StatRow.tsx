@@ -1,12 +1,13 @@
 "use client";
 
 import type { Posture } from "./findings";
+import { SEV_TEXT } from "./severity";
 
 const LEVEL_COLOR: Record<Posture["level"], string> = {
   Low: "#34d399",
   Medium: "#fbbf24",
-  High: "#fb923c",
-  Critical: "#f87171",
+  High: "#db6b6b",
+  Critical: "#f04438",
 };
 
 function MiniRing({ score, color }: { score: number; color: string }) {
@@ -69,16 +70,16 @@ export function StatRow({ posture }: { posture: Posture }) {
         <Label>OPEN FINDINGS</Label>
         <p className="mt-2 font-mono text-3xl font-bold text-zinc-100">{posture.found}</p>
         <div className="mt-1 flex flex-wrap gap-1.5 font-mono text-[10px]">
-          {posture.counts.critical > 0 && <span className="text-red-400">{posture.counts.critical} crit</span>}
-          {posture.counts.high > 0 && <span className="text-orange-400">{posture.counts.high} high</span>}
-          {posture.counts.medium > 0 && <span className="text-amber-400">{posture.counts.medium} med</span>}
+          {posture.counts.critical > 0 && <span className={SEV_TEXT.critical}>{posture.counts.critical} crit</span>}
+          {posture.counts.high > 0 && <span className={SEV_TEXT.high}>{posture.counts.high} high</span>}
+          {posture.counts.medium > 0 && <span className={SEV_TEXT.medium}>{posture.counts.medium} med</span>}
           {posture.found === 0 && <span className="text-zinc-600">none open</span>}
         </div>
       </Card>
 
       <Card>
         <Label>EXPLOITED LIVE</Label>
-        <p className={`mt-2 font-mono text-3xl font-bold ${posture.exploited > 0 ? "text-red-400" : "text-zinc-100"}`}>
+        <p className={`mt-2 font-mono text-3xl font-bold ${posture.exploited > 0 ? "text-[#f04438]" : "text-zinc-100"}`}>
           {posture.exploited}
         </p>
         <p className="mt-1 font-mono text-[10px] text-zinc-500">

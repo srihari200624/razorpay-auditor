@@ -41,13 +41,21 @@ export const SEVERITY_RANK: Record<Severity, number> = { critical: 0, high: 1, m
 export const SEVERITY_WEIGHT: Record<Severity, number> = { critical: 30, high: 18, medium: 10 };
 
 // Shared UI classes so the stat row and the findings table stay in sync.
+// Red-intensity ramp: one danger hue in three intensities so severity never
+// competes with the blue action accent.
 export const SEV_PILL: Record<Severity, string> = {
-  critical: "border-red-500/30 bg-red-500/10 text-red-400",
-  high: "border-orange-500/30 bg-orange-500/10 text-orange-400",
-  medium: "border-amber-500/30 bg-amber-500/10 text-amber-400",
+  critical: "border-[#f04438]/30 bg-[#f04438]/10 text-[#f04438]",
+  high: "border-[#db6b6b]/30 bg-[#db6b6b]/10 text-[#db6b6b]",
+  medium: "border-[#9ca3af]/25 bg-[#9ca3af]/10 text-[#9ca3af]",
 };
 export const SEV_DOT: Record<Severity, string> = {
-  critical: "bg-red-500",
-  high: "bg-orange-500",
-  medium: "bg-amber-500",
+  critical: "bg-[#f04438]",
+  high: "bg-[#db6b6b]",
+  medium: "bg-[#9ca3af]",
+};
+// Bare text tone for inline breakdown counts (no pill).
+export const SEV_TEXT: Record<Severity, string> = {
+  critical: "text-[#f04438]",
+  high: "text-[#db6b6b]",
+  medium: "text-[#9ca3af]",
 };

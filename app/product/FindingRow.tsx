@@ -63,7 +63,7 @@ export function FindingRow({
             <span className="rounded border border-zinc-700 px-1.5 py-0.5 font-mono text-[10px] text-zinc-400">static ✓</span>
           )}
           {finding.exploited && (
-            <span className="rounded border border-red-500/40 bg-red-500/10 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-red-400">
+            <span className="rounded border border-[#f04438]/40 bg-[#f04438]/10 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-[#f04438]">
               ⚔ exploited
             </span>
           )}
@@ -79,7 +79,7 @@ export function FindingRow({
               fixing…
             </span>
           ) : (
-            <Pill dot="bg-red-500" className="border-red-500/30 bg-red-500/10 text-red-400">open</Pill>
+            <Pill dot="bg-zinc-500" className="border-white/10 bg-white/[0.04] text-zinc-400">open</Pill>
           )}
         </span>
 

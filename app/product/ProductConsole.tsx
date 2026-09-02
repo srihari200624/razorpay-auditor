@@ -8,39 +8,6 @@ import { EntryForm } from "./EntryForm";
 import { StatRow } from "./StatRow";
 import { FindingRow, ROW_GRID } from "./FindingRow";
 
-function Sidebar({ onNewScan }: { onNewScan: () => void }) {
-  return (
-    <aside className="hidden w-56 shrink-0 flex-col border-r border-white/[0.06] bg-[#0d0d0f] px-4 py-5 md:flex">
-      <Link href="/" className="flex items-baseline gap-2 px-2">
-        <span className="font-sans text-sm font-bold tracking-wide text-zinc-100">AUDITOR</span>
-        <span className="font-mono text-[9px] font-semibold tracking-widest text-blue-400">PRODUCT</span>
-      </Link>
-
-      <nav className="mt-6 flex flex-col gap-1">
-        <a href="#overview" className="rounded-lg px-3 py-2 font-sans text-sm text-zinc-300 hover:bg-white/[0.04]">
-          Overview
-        </a>
-        <a href="#findings" className="rounded-lg px-3 py-2 font-sans text-sm text-zinc-300 hover:bg-white/[0.04]">
-          Findings
-        </a>
-      </nav>
-
-      <button
-        type="button"
-        onClick={onNewScan}
-        className="mt-4 rounded-lg border border-white/10 px-3 py-2 font-sans text-xs font-semibold text-zinc-300 hover:border-white/25"
-      >
-        + New scan
-      </button>
-
-      <div className="mt-auto flex flex-col gap-1 px-2 pt-6 font-mono text-[11px] text-zinc-600">
-        <Link href="/audit" className="hover:text-zinc-400">side-by-side demo →</Link>
-        <Link href="/" className="hover:text-zinc-400">home →</Link>
-      </div>
-    </aside>
-  );
-}
-
 function Scanning({ resolved, total }: { resolved: number; total: number }) {
   const pct = total > 0 ? Math.round((resolved / total) * 100) : 0;
   return (
@@ -63,6 +30,18 @@ function Scanning({ resolved, total }: { resolved: number; total: number }) {
       </div>
       <p className="mt-2 font-mono text-xs text-zinc-500">{resolved} / {total} checks complete</p>
     </div>
+  );
+}
+
+function WrenchIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
+      <path
+        fillRule="evenodd"
+        d="M12 6.75a5.25 5.25 0 0 1 6.775-5.025.75.75 0 0 1 .313 1.248l-3.32 3.319c.063.475.276.934.641 1.299.365.365.824.578 1.3.64l3.318-3.319a.75.75 0 0 1 1.248.313 5.25 5.25 0 0 1-5.472 6.756c-1.018-.086-1.87.1-2.309.634L7.344 21.3A3.298 3.298 0 1 1 2.7 16.657l8.684-7.151c.533-.44.72-1.291.634-2.309A5.342 5.342 0 0 1 12 6.75ZM4.117 19.125a.75.75 0 0 1 .75-.75h.008a.75.75 0 0 1 .75.75v.008a.75.75 0 0 1-.75.75h-.008a.75.75 0 0 1-.75-.75v-.008Z"
+        clipRule="evenodd"
+      />
+    </svg>
   );
 }
 
@@ -170,42 +149,48 @@ export function ProductConsole() {
   }
 
   return (
-    <div className="flex min-h-screen bg-[#0a0a0b] text-zinc-100">
-      <Sidebar onNewScan={newScan} />
-
-      <main className="min-w-0 flex-1">
-        {/* Header */}
-        <header className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.06] px-6 py-4">
-          <div className="min-w-0">
-            <h1 id="overview" className="font-sans text-lg font-semibold text-zinc-100">
-              Security audit
-            </h1>
-            <p className="truncate font-mono text-xs text-zinc-500">{target}</p>
+    <div className="flex min-h-screen flex-col bg-[#0a0a0b] text-zinc-100">
+      {/* Header */}
+      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.06] px-6 py-4">
+        <div className="min-w-0">
+          <div className="flex items-baseline gap-2">
+            <Link href="/" className="font-sans text-sm font-bold tracking-wide text-zinc-100">
+              AUDITOR
+            </Link>
+            <span className="font-mono text-[9px] font-semibold tracking-widest text-blue-400">PRODUCT</span>
           </div>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                setVerified({});
-                setFixFailures({});
-                setFixBanner(null);
-                run(source ?? "", target);
-              }}
-              className="rounded-lg border border-white/10 px-3 py-1.5 font-sans text-xs font-semibold text-zinc-300 hover:border-white/25"
-            >
-              Re-run
-            </button>
-            <button
-              type="button"
-              onClick={newScan}
-              className="rounded-lg border border-white/10 px-3 py-1.5 font-sans text-xs font-semibold text-zinc-300 hover:border-white/25"
-            >
-              New scan
-            </button>
-          </div>
-        </header>
+          <h1 id="overview" className="mt-1 font-sans text-lg font-semibold text-zinc-100">
+            Security audit
+          </h1>
+          <p className="truncate font-mono text-xs text-zinc-500">{target}</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Link href="/audit" className="mr-1 font-mono text-xs text-zinc-500 hover:text-zinc-300">
+            demo →
+          </Link>
+          <button
+            type="button"
+            onClick={() => {
+              setVerified({});
+              setFixFailures({});
+              setFixBanner(null);
+              run(source ?? "", target);
+            }}
+            className="rounded-lg border border-white/10 px-3 py-1.5 font-sans text-xs font-semibold text-zinc-300 hover:border-white/25"
+          >
+            Re-run
+          </button>
+          <button
+            type="button"
+            onClick={newScan}
+            className="rounded-lg border border-white/10 px-3 py-1.5 font-sans text-xs font-semibold text-zinc-300 hover:border-white/25"
+          >
+            New scan
+          </button>
+        </div>
+      </header>
 
-        <div className="mx-auto flex max-w-5xl flex-col gap-5 px-6 py-6">
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-5 px-6 py-6">
           <StatRow posture={p} />
 
           {found.length > 0 && (
@@ -219,15 +204,24 @@ export function ProductConsole() {
                     type="button"
                     onClick={autoFixAll}
                     disabled={autoFixing}
-                    className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 font-sans text-sm font-semibold text-white transition-colors hover:bg-blue-500 disabled:opacity-50"
+                    className="group inline-flex items-center gap-2.5 rounded-lg bg-blue-600 py-1.5 pl-1.5 pr-3.5 font-sans text-sm font-semibold text-white shadow-sm ring-1 ring-inset ring-white/15 transition-all hover:bg-blue-500 hover:ring-white/25 disabled:opacity-60"
                   >
+                    <span className="flex h-6 w-6 items-center justify-center rounded-md bg-white/15">
+                      {autoFixing ? (
+                        <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/70 border-t-transparent" aria-hidden="true" />
+                      ) : (
+                        <WrenchIcon className="h-3.5 w-3.5" />
+                      )}
+                    </span>
                     {autoFixing ? (
-                      <>
-                        <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/70 border-t-transparent" aria-hidden="true" />
-                        Auto-fixing… {p.fixed}/{found.length} re-verified
-                      </>
+                      <span className="tabular-nums">Auto-fixing… {p.fixed}/{found.length}</span>
                     ) : (
-                      <>⚡ Auto-fix all findings ({openFound.length})</>
+                      <>
+                        <span>Auto-fix all findings</span>
+                        <span className="rounded bg-white/20 px-1.5 py-0.5 font-mono text-xs leading-none">
+                          {openFound.length}
+                        </span>
+                      </>
                     )}
                   </button>
                 ) : (
@@ -295,7 +289,6 @@ export function ProductConsole() {
             </section>
           )}
         </div>
-      </main>
     </div>
   );
 }
