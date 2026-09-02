@@ -32,6 +32,12 @@ export default function Home() {
             >
               Run the live audit →
             </Link>
+            <Link
+              href="/product"
+              className="rounded-md border border-white/15 px-5 py-2.5 font-sans text-sm font-semibold text-zinc-200 transition-colors hover:border-white/30"
+            >
+              See it as a product →
+            </Link>
             <a
               href={AUDITOR_REPO}
               target="_blank"

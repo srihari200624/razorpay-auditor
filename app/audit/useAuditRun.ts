@@ -24,6 +24,8 @@ function initialEntries(): LogEntry[] {
         detail: null,
         ruleId: r.id,
         parentId: null,
+        matchedCode: null,
+        evidence: null,
       }),
     ),
     ...ATTACK_CATALOG.map(
@@ -37,6 +39,8 @@ function initialEntries(): LogEntry[] {
         detail: null,
         ruleId: ruleIdForAttack(a.id),
         parentId: null,
+        matchedCode: null,
+        evidence: null,
       }),
     ),
   ];
@@ -77,6 +81,7 @@ export function useAuditRun() {
           time: formatTimestamp(),
           meta: data.lineNumber ? `${data.filePath}:${data.lineNumber}` : data.filePath,
           detail: data.explanation,
+          matchedCode: data.matchedCode ?? null,
         });
       } catch (err) {
         patch(id, { status: "error", time: formatTimestamp(), detail: (err as Error).message });
@@ -95,6 +100,7 @@ export function useAuditRun() {
           time: formatTimestamp(),
           meta: `HTTP ${data.httpStatus}`,
           detail: data.details,
+          evidence: data.evidence ?? null,
         });
       } catch (err) {
         patch(id, { status: "error", time: formatTimestamp(), detail: (err as Error).message });
