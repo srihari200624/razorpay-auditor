@@ -42,7 +42,12 @@ export async function POST(req: Request) {
   try {
     const stream = explainStream(body);
     return new Response(stream, {
-      headers: { "content-type": "text/plain; charset=utf-8" },
+      headers: {
+        "content-type": "text/plain; charset=utf-8",
+        // Keep intermediaries from re-buffering the token stream into bursts.
+        "cache-control": "no-transform",
+        "x-content-type-options": "nosniff",
+      },
     });
   } catch (err) {
     return NextResponse.json({ error: (err as Error).message }, { status: 502 });

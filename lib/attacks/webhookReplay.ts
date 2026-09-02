@@ -58,6 +58,33 @@ export async function webhookReplay(
     details,
     httpStatus: second.httpStatus,
     targetUrl,
+    evidence: {
+      exchanges: [
+        {
+          label: "Delivery 1 of 2 (signed payment.captured)",
+          method: "POST",
+          path: "/api/webhook",
+          headers: { "x-razorpay-event-id": eventId, "x-razorpay-signature": `${signature.slice(0, 16)}… (valid)` },
+          body: rawBody,
+          responseStatus: first.httpStatus,
+          responseBody: first.body,
+        },
+        {
+          label: "Delivery 2 of 2 (identical event id — should be deduped)",
+          method: "POST",
+          path: "/api/webhook",
+          headers: { "x-razorpay-event-id": eventId, "x-razorpay-signature": `${signature.slice(0, 16)}… (valid)` },
+          body: rawBody,
+          responseStatus: second.httpStatus,
+          responseBody: second.body,
+        },
+      ],
+      stateTrail: [
+        { label: "before", status: baseline.status, creditedRupees: baseline.creditedAmountRupees },
+        { label: "after delivery 1", status: afterFirst.status, creditedRupees: afterFirst.creditedAmountRupees },
+        { label: "after delivery 2", status: afterSecond.status, creditedRupees: afterSecond.creditedAmountRupees },
+      ],
+    },
   };
 }
 

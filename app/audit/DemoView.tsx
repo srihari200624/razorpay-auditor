@@ -1,6 +1,7 @@
 "use client";
 
 import { EvidenceLog } from "./EvidenceLog";
+import { Scoreboard } from "./Scoreboard";
 import { useAuditRun } from "./useAuditRun";
 import { DEMO_TARGETS } from "@/lib/config/demoTargets";
 
@@ -17,21 +18,24 @@ function Panel({
 
   return (
     <section className="flex min-h-0 flex-1 flex-col rounded-lg border border-white/10 bg-zinc-800/60">
-      <header className="flex items-center justify-between gap-4 border-b border-white/10 px-4 py-3">
-        <div className="min-w-0">
-          <h2 className={`font-sans text-lg font-semibold tracking-wide ${accentClass}`}>{title}</h2>
-          <p className="mt-0.5 truncate font-mono text-xs text-zinc-500">
-            {target.repoUrl.replace("https://github.com/", "")} · {target.liveUrl}
-          </p>
+      <header className="flex flex-col gap-2 border-b border-white/10 px-4 py-3">
+        <div className="flex items-center justify-between gap-4">
+          <div className="min-w-0">
+            <h2 className={`font-sans text-lg font-semibold tracking-wide ${accentClass}`}>{title}</h2>
+            <p className="mt-0.5 truncate font-mono text-xs text-zinc-500">
+              {target.repoUrl.replace("https://github.com/", "")} · {target.liveUrl}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => run(target.repoUrl, target.liveUrl)}
+            disabled={running}
+            className="shrink-0 rounded border border-white/15 px-3 py-1.5 font-sans text-xs font-semibold tracking-wide text-zinc-200 hover:border-white/30 disabled:opacity-40"
+          >
+            {running ? "RUNNING…" : "RUN"}
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={() => run(target.repoUrl, target.liveUrl)}
-          disabled={running}
-          className="shrink-0 rounded border border-white/15 px-3 py-1.5 font-sans text-xs font-semibold tracking-wide text-zinc-200 hover:border-white/30 disabled:opacity-40"
-        >
-          {running ? "RUNNING…" : "RUN"}
-        </button>
+        <Scoreboard entries={entries} />
       </header>
       <div className="flex-1 overflow-y-auto">
         <EvidenceLog

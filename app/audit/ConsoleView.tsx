@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { EvidenceLog } from "./EvidenceLog";
+import { Scoreboard } from "./Scoreboard";
 import { useAuditRun } from "./useAuditRun";
 
 export function ConsoleView() {
@@ -28,7 +29,7 @@ export function ConsoleView() {
           <input
             value={source}
             onChange={(e) => setSource(e.target.value)}
-            placeholder="https://github.com/owner/repo or ../local-path"
+            placeholder="https://github.com/owner/repo"
             className="rounded border border-white/15 bg-black/30 px-3 py-2 font-mono text-sm text-zinc-100 outline-none focus:border-white/40"
           />
         </label>
@@ -52,6 +53,11 @@ export function ConsoleView() {
         </button>
       </form>
       <section className="flex min-h-0 flex-1 flex-col rounded-lg border border-white/10 bg-zinc-800/60">
+        {entries.length > 0 && (
+          <div className="border-b border-white/10 px-4 py-2.5">
+            <Scoreboard entries={entries} />
+          </div>
+        )}
         <div className="flex-1 overflow-y-auto">
           <EvidenceLog
             entries={entries}

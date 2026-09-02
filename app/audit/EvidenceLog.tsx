@@ -1,6 +1,7 @@
 import type { LogEntry } from "./types";
 import { STATUS_STYLES } from "./theme";
 import { FindingActions } from "./FindingActions";
+import { EvidencePanel } from "./EvidencePanel";
 
 function Row({ entry, indent }: { entry: LogEntry; indent: boolean }) {
   const style = STATUS_STYLES[entry.status];
@@ -58,16 +59,24 @@ export function EvidenceLog({
     <div className="divide-y divide-white/5">
       {roots.map((entry) => {
         const canAct = entry.status === "found" || entry.status === "hit";
+        const hasEvidence =
+          (entry.kind === "attack" &&
+            entry.evidence != null &&
+            (entry.evidence.exchanges.length > 0 || entry.evidence.stateTrail.length > 0)) ||
+          (entry.kind === "rule" && !!entry.matchedCode);
         return (
           <div key={entry.id}>
             <Row entry={entry} indent={false} />
-            {canAct && (
+            {(canAct || hasEvidence) && (
               <div className="px-4 pb-3 pl-[27px]">
-                <FindingActions
-                  entry={entry}
-                  source={source}
-                  onVerified={(explanation, meta) => onVerified?.(entry, explanation, meta)}
-                />
+                {canAct && (
+                  <FindingActions
+                    entry={entry}
+                    source={source}
+                    onVerified={(explanation, meta) => onVerified?.(entry, explanation, meta)}
+                  />
+                )}
+                <EvidencePanel entry={entry} />
               </div>
             )}
             {childrenOf(entry.id).map((child) => (

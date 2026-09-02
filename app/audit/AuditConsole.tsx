@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { DemoView } from "./DemoView";
 import { ConsoleView } from "./ConsoleView";
 
@@ -19,6 +20,12 @@ export function AuditConsole() {
       <header className="border-b border-white/10 px-4 py-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
+            <Link
+              href="/"
+              className="mb-1 inline-block font-mono text-[11px] text-zinc-500 hover:text-zinc-300"
+            >
+              ← auditor
+            </Link>
             <h1 className="font-sans text-xl font-semibold tracking-wide text-zinc-100">
               AUDITOR <span className="text-zinc-500">— evidence log</span>
             </h1>

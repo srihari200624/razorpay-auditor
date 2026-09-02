@@ -1,3 +1,5 @@
+import type { AttackEvidence } from "@/lib/attacks/types";
+
 export type EntryKind = "rule" | "attack";
 
 // found -> a static rule matched (amber). clear/blocked -> a static rule
@@ -24,4 +26,10 @@ export interface LogEntry {
   ruleId: string | null;
   /** Set on an appended re-verify entry: the id of the finding it verifies. */
   parentId: string | null;
+  /** Structured proof for an attack row (request/response + state trail),
+   * surfaced in the evidence expander. Null until the attack resolves. */
+  evidence?: AttackEvidence | null;
+  /** The matched source snippet for a rule row (from RuleResult.matchedCode),
+   * shown in the evidence expander. Null when the rule found nothing / N/A. */
+  matchedCode?: string | null;
 }

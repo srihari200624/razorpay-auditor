@@ -46,6 +46,26 @@ export async function forgedSignature(
     details,
     httpStatus: delivery.httpStatus,
     targetUrl,
+    evidence: {
+      exchanges: [
+        {
+          label: "Forged webhook (wrong-length signature)",
+          method: "POST",
+          path: "/api/webhook",
+          headers: {
+            "x-razorpay-event-id": eventId,
+            "x-razorpay-signature": `"${WRONG_LENGTH_SIGNATURE}" (${WRONG_LENGTH_SIGNATURE.length} chars, not 64-hex)`,
+          },
+          body: rawBody,
+          responseStatus: delivery.httpStatus,
+          responseBody: delivery.body,
+        },
+      ],
+      stateTrail: [
+        { label: "before", status: baseline.status, creditedRupees: baseline.creditedAmountRupees },
+        { label: "after", status: after.status, creditedRupees: after.creditedAmountRupees },
+      ],
+    },
   };
 }
 
