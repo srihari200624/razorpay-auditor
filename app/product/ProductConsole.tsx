@@ -5,21 +5,39 @@ import Link from "next/link";
 import { useAuditRun } from "../audit/useAuditRun";
 import { toFindings, posture } from "./findings";
 import { EntryForm } from "./EntryForm";
-import { PostureHeader } from "./PostureHeader";
-import { FindingCard } from "./FindingCard";
+import { StatRow } from "./StatRow";
+import { FindingRow, ROW_GRID } from "./FindingRow";
 
-function TopBar() {
+function Sidebar({ onNewScan }: { onNewScan: () => void }) {
   return (
-    <header className="border-b border-white/10 px-6 py-3">
-      <div className="mx-auto flex max-w-3xl items-center justify-between">
-        <Link href="/" className="font-sans text-sm font-semibold tracking-wide text-zinc-100">
-          AUDITOR <span className="font-mono text-[10px] tracking-widest text-sky-400">PRODUCT</span>
-        </Link>
-        <Link href="/audit" className="font-mono text-xs text-zinc-500 hover:text-zinc-300">
-          demo →
-        </Link>
+    <aside className="hidden w-56 shrink-0 flex-col border-r border-white/[0.06] bg-[#0d0d0f] px-4 py-5 md:flex">
+      <Link href="/" className="flex items-baseline gap-2 px-2">
+        <span className="font-sans text-sm font-bold tracking-wide text-zinc-100">AUDITOR</span>
+        <span className="font-mono text-[9px] font-semibold tracking-widest text-blue-400">PRODUCT</span>
+      </Link>
+
+      <nav className="mt-6 flex flex-col gap-1">
+        <a href="#overview" className="rounded-lg px-3 py-2 font-sans text-sm text-zinc-300 hover:bg-white/[0.04]">
+          Overview
+        </a>
+        <a href="#findings" className="rounded-lg px-3 py-2 font-sans text-sm text-zinc-300 hover:bg-white/[0.04]">
+          Findings
+        </a>
+      </nav>
+
+      <button
+        type="button"
+        onClick={onNewScan}
+        className="mt-4 rounded-lg border border-white/10 px-3 py-2 font-sans text-xs font-semibold text-zinc-300 hover:border-white/25"
+      >
+        + New scan
+      </button>
+
+      <div className="mt-auto flex flex-col gap-1 px-2 pt-6 font-mono text-[11px] text-zinc-600">
+        <Link href="/audit" className="hover:text-zinc-400">side-by-side demo →</Link>
+        <Link href="/" className="hover:text-zinc-400">home →</Link>
       </div>
-    </header>
+    </aside>
   );
 }
 
@@ -27,7 +45,7 @@ function Scanning({ resolved, total }: { resolved: number; total: number }) {
   const pct = total > 0 ? Math.round((resolved / total) * 100) : 0;
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col justify-center px-6 py-20">
-      <p className="font-mono text-xs font-semibold tracking-[0.2em] text-sky-400">AUDITING…</p>
+      <p className="font-mono text-xs font-semibold tracking-[0.2em] text-blue-400">AUDITING…</p>
       <h2 className="mt-3 text-2xl font-semibold text-zinc-100">Proving your integration</h2>
       <p className="mt-2 text-sm text-zinc-400">
         Running six deterministic rules and firing three real attacks at the live endpoints.
@@ -36,20 +54,14 @@ function Scanning({ resolved, total }: { resolved: number; total: number }) {
         <div
           className="pointer-events-none absolute inset-y-0 w-24"
           style={{
-            background:
-              "linear-gradient(90deg, rgba(56,189,248,0) 0%, rgba(56,189,248,0.5) 50%, rgba(56,189,248,0) 100%)",
+            background: "linear-gradient(90deg, rgba(59,130,246,0) 0%, rgba(59,130,246,0.5) 50%, rgba(59,130,246,0) 100%)",
             animation: "scanline 1.4s ease-in-out infinite",
           }}
           aria-hidden="true"
         />
-        <div
-          className="h-full rounded-full bg-sky-500"
-          style={{ width: `${pct}%`, transition: "width 0.4s ease" }}
-        />
+        <div className="h-full rounded-full bg-blue-500" style={{ width: `${pct}%`, transition: "width 0.4s ease" }} />
       </div>
-      <p className="mt-2 font-mono text-xs text-zinc-500">
-        {resolved} / {total} checks complete
-      </p>
+      <p className="mt-2 font-mono text-xs text-zinc-500">{resolved} / {total} checks complete</p>
     </div>
   );
 }
@@ -83,6 +95,13 @@ export function ProductConsole() {
     setTarget(live);
     setStarted(true);
     run(repo, live);
+  }
+
+  function newScan() {
+    setStarted(false);
+    setVerified({});
+    setFixFailures({});
+    setFixBanner(null);
   }
 
   async function autoFixAll() {
@@ -141,31 +160,56 @@ export function ProductConsole() {
     }
   }
 
-  return (
-    <div className="flex min-h-screen flex-col bg-zinc-950 text-zinc-100">
-      <TopBar />
+  // Entry / scanning: centered, no dashboard shell.
+  if (!started || running) {
+    return (
+      <div className="flex min-h-screen flex-col bg-[#0a0a0b] text-zinc-100">
+        {!started ? <EntryForm onRun={startRun} /> : <Scanning resolved={resolved} total={total} />}
+      </div>
+    );
+  }
 
-      {!started ? (
-        <EntryForm onRun={startRun} />
-      ) : running ? (
-        <Scanning resolved={resolved} total={total} />
-      ) : (
-        <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-5 px-6 py-8">
-          <PostureHeader
-            posture={p}
-            target={target}
-            onNewScan={() => {
-              setStarted(false);
-              setVerified({});
-            }}
-            onRerun={() => {
-              setVerified({});
-              run(source ?? "", target);
-            }}
-          />
+  return (
+    <div className="flex min-h-screen bg-[#0a0a0b] text-zinc-100">
+      <Sidebar onNewScan={newScan} />
+
+      <main className="min-w-0 flex-1">
+        {/* Header */}
+        <header className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.06] px-6 py-4">
+          <div className="min-w-0">
+            <h1 id="overview" className="font-sans text-lg font-semibold text-zinc-100">
+              Security audit
+            </h1>
+            <p className="truncate font-mono text-xs text-zinc-500">{target}</p>
+          </div>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setVerified({});
+                setFixFailures({});
+                setFixBanner(null);
+                run(source ?? "", target);
+              }}
+              className="rounded-lg border border-white/10 px-3 py-1.5 font-sans text-xs font-semibold text-zinc-300 hover:border-white/25"
+            >
+              Re-run
+            </button>
+            <button
+              type="button"
+              onClick={newScan}
+              className="rounded-lg border border-white/10 px-3 py-1.5 font-sans text-xs font-semibold text-zinc-300 hover:border-white/25"
+            >
+              New scan
+            </button>
+          </div>
+        </header>
+
+        <div className="mx-auto flex max-w-5xl flex-col gap-5 px-6 py-6">
+          <StatRow posture={p} />
 
           {found.length > 0 && (
-            <section className="flex flex-col gap-3">
+            <section id="findings" className="flex flex-col gap-3">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <p className="font-sans text-[11px] font-semibold tracking-widest text-zinc-500">
                   FINDINGS · WORST FIRST
@@ -175,14 +219,11 @@ export function ProductConsole() {
                     type="button"
                     onClick={autoFixAll}
                     disabled={autoFixing}
-                    className="inline-flex items-center gap-2 rounded-lg bg-sky-500 px-4 py-2 font-sans text-sm font-semibold text-zinc-950 transition-colors hover:bg-sky-400 disabled:opacity-50"
+                    className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 font-sans text-sm font-semibold text-white transition-colors hover:bg-blue-500 disabled:opacity-50"
                   >
                     {autoFixing ? (
                       <>
-                        <span
-                          className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-zinc-900 border-t-transparent"
-                          aria-hidden="true"
-                        />
+                        <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/70 border-t-transparent" aria-hidden="true" />
                         Auto-fixing… {p.fixed}/{found.length} re-verified
                       </>
                     ) : (
@@ -203,24 +244,30 @@ export function ProductConsole() {
                   {fixBanner}
                 </p>
               )}
-              {p.fixed > 0 && openFound.length === 0 && (
-                <p className="text-sm text-zinc-400">
-                  Each fix was applied to an in-memory copy and re-verified by re-running its own
-                  deterministic rule — your source was never modified.
-                </p>
-              )}
 
-              {found.map((f) => (
-                <FindingCard
-                  key={f.defectId}
-                  finding={f}
-                  source={source}
-                  verified={!!verified[f.defectId]}
-                  fixing={currentFixId === f.defectId}
-                  failure={fixFailures[f.defectId]}
-                  onVerified={(id) => setVerified((v) => ({ ...v, [id]: true }))}
-                />
-              ))}
+              {/* Findings table */}
+              <div className="overflow-x-auto rounded-xl border border-white/[0.07] bg-[#151517]">
+                <div className="min-w-[680px]">
+                  <div className={`${ROW_GRID} px-4 py-2.5 font-sans text-[10px] font-semibold tracking-widest text-zinc-500`}>
+                    <span>SEVERITY</span>
+                    <span>FINDING</span>
+                    <span>PROOF</span>
+                    <span>STATUS</span>
+                    <span />
+                  </div>
+                  {found.map((f) => (
+                    <FindingRow
+                      key={f.defectId}
+                      finding={f}
+                      source={source}
+                      verified={!!verified[f.defectId]}
+                      fixing={currentFixId === f.defectId}
+                      failure={fixFailures[f.defectId]}
+                      onVerified={(id) => setVerified((v) => ({ ...v, [id]: true }))}
+                    />
+                  ))}
+                </div>
+              </div>
             </section>
           )}
 
@@ -237,10 +284,7 @@ export function ProductConsole() {
               {passedOpen && (
                 <div className="mt-2 flex flex-col gap-1.5">
                   {passed.map((f) => (
-                    <div
-                      key={f.defectId}
-                      className="flex items-center gap-2 rounded-lg border border-white/5 bg-zinc-900/40 px-3 py-2"
-                    >
+                    <div key={f.defectId} className="flex items-center gap-2 rounded-lg border border-white/5 bg-[#151517] px-3 py-2">
                       <span className="font-mono text-xs text-emerald-400">✓</span>
                       <span className="min-w-0 flex-1 truncate text-sm text-zinc-300">{f.title}</span>
                       <span className="font-mono text-[10px] text-zinc-600">secure</span>
@@ -250,8 +294,8 @@ export function ProductConsole() {
               )}
             </section>
           )}
-        </main>
-      )}
+        </div>
+      </main>
     </div>
   );
 }

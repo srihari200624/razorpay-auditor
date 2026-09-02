@@ -39,3 +39,15 @@ export const SEVERITY: Record<string, SeverityInfo> = {
 
 export const SEVERITY_RANK: Record<Severity, number> = { critical: 0, high: 1, medium: 2 };
 export const SEVERITY_WEIGHT: Record<Severity, number> = { critical: 30, high: 18, medium: 10 };
+
+// Shared UI classes so the stat row and the findings table stay in sync.
+export const SEV_PILL: Record<Severity, string> = {
+  critical: "border-red-500/30 bg-red-500/10 text-red-400",
+  high: "border-orange-500/30 bg-orange-500/10 text-orange-400",
+  medium: "border-amber-500/30 bg-amber-500/10 text-amber-400",
+};
+export const SEV_DOT: Record<Severity, string> = {
+  critical: "bg-red-500",
+  high: "bg-orange-500",
+  medium: "bg-amber-500",
+};
