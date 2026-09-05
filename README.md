@@ -2,10 +2,14 @@
 
 **Finds and _proves_ security defects in Razorpay payment integrations — by firing real attacks at real endpoints and running deterministic static rules over the source, then drafting a fix and re-verifying it. The AI never decides pass/fail.**
 
-▶ **Live demo:** https://razorpay-auditor.vercel.app/audit
+▶ **Live demo:** [side-by-side proof](https://razorpay-auditor.vercel.app/audit) &nbsp;·&nbsp; [audit an integration](https://razorpay-auditor.vercel.app/product)
 &nbsp;·&nbsp; Targets: [vulnerable](https://razorpay-auditor-vulnerable.vercel.app) · [fixed](https://razorpay-auditor-fixed.vercel.app)
 
-<!-- TODO: drop a screenshot / GIF of the /audit red→blue re-verify flow here. -->
+| Before | After |
+|---|---|
+| ![Auditor /product with 6 open findings and a risk score of 0, CRITICAL](docs/screenshots/product-audit-critical.png) | ![Auditor /product with all 6 findings remediated and re-verified, risk score 100, LOW](docs/screenshots/product-audit-remediated.png) |
+
+<sub><b>The same audit, before and after remediation.</b> Left: 6 open findings, 3 of them <b>exploited live</b> — risk score <b>0 / 100, CRITICAL</b>. Right: after <i>Auto-fix all</i>, every row reads <b>fixed</b> and the score is <b>100 / 100, LOW</b>. A row flips to <code>fixed</code> only after the same deterministic rule that proved the defect is re-run against the patched code and comes back clean — never because the model said it fixed it.</sub>
 
 ---
 
@@ -27,6 +31,14 @@ Open the [live audit](https://razorpay-auditor.vercel.app/audit), **Demo** tab: 
 - Every finding lands in the evidence log — **red** = a live attack succeeded, **amber** = a static rule matched, **sky/blue** = verified secure.
 - On any red/amber finding: **Explain** (streamed, advisory) → **Draft fix** (a real diff, grounded in the known-good reference) → **Apply**.
 - Apply patches an **in-memory copy**, re-runs the real check, and the finding flips **red → blue**. The audited app is never written to.
+
+![The evidence log: the vulnerable app on the left with FOUND findings and a drafted diff, the fixed app on the right all CLEAR](docs/screenshots/audit-evidence-log.png)
+
+<sub>The **Demo** tab mid-run. Left, the vulnerable target: <code>3 LIVE HITS · 6 FOUND</code>, with a drafted fix open — a real diff for <code>app/page.tsx</code>, labelled *advisory, unverified until Apply*. Right, the identical-but-correct target: every check <code>CLEAR</code>, each with the reason it passed. Same engine, same run, opposite verdicts.</sub>
+
+![The same finding after Apply, with a sky-blue FIX RE-VERIFIED entry appended beneath the original amber one](docs/screenshots/audit-fix-reverified.png)
+
+<sub>After **Apply**. The rule was re-run against the patched copy and came back clean, so a <code>FIX RE-VERIFIED</code> entry is **appended** beneath the original finding — the amber proof is never rewritten. The log keeps the fact that the target *was* vulnerable next to the proof that the fix holds.</sub>
 
 ```mermaid
 flowchart LR
@@ -55,6 +67,14 @@ Three of the six are also provable by a **live attack** (the paired rule and the
 | Razorpay key secret exposed to the client bundle | `secret-exposure` | — |
 | Order-id trust / non-constant-time signature compare | `order-id-trust` | — |
 | Event-order assumption (captured assumes authorized) | `event-order-assumption` | — |
+
+## Two front ends, one engine
+
+`/audit` puts the mechanism on display — an evidence log, verdict by verdict. `/product` is the same six rules and three attacks (the same `useAuditRun` hook, the same API routes — no second engine) reframed as a tool you point at **your own** integration: one row per defect, ranked worst-first, with a risk score derived from what is still open.
+
+![The /product entry form: source repository and live URL fields, with Run audit and Try a sample buttons](docs/screenshots/product-new-audit.png)
+
+Give it a repo and a live URL — or press **Try a sample** to run against the deliberately vulnerable target. Each row expands into the same evidence (the matched source line; for a live attack, the actual requests fired and the order-state trail read back) and the same Explain → Draft fix → Apply flow. **Auto-fix all** loops that flow across every open finding, one at a time; each fix is still verified by its own rule, so the score at the top only moves when a deterministic check says it should.
 
 ## The three repos
 
